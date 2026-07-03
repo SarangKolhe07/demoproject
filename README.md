@@ -58,3 +58,4 @@ This repository provides a modular Terraform baseline for deploying a secure, hi
 - The current implementation uses a basic Apache web page on Amazon Linux 2.
 - HTTPS/TLS termination is intentionally left as a follow-up step to be wired to ACM certificates.
 - For production, add remote state storage such as S3 + DynamoDB and tighten SG rules further.
+added
