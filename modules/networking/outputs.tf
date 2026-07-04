@@ -1,5 +1,5 @@
 output "vpc_id" {
-  value = aws_vpc.pamentology_vpc.id
+  value = aws_vpc.paymentology_vpc.id
 }
 
 output "public_subnet_ids" {
