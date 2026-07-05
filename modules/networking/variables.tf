@@ -45,3 +45,13 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "vpc_flow_logs_log_group_arn" {
+  description = "CloudWatch log group ARN for VPC flow logs"
+  type        = string
+}
+
+variable "vpc_flow_logs_iam_role_arn" {
+  description = "IAM role ARN used by VPC flow logs to publish to CloudWatch"
+  type        = string
+}

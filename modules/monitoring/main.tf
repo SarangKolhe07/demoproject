@@ -139,3 +139,14 @@ resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_hosts" {
     LoadBalancer = var.alb_arn_suffix
   }
 }
+resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
+  name              = "${var.project_name}-vpc-flow-logs"
+  retention_in_days = 14
+
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.project_name}-vpc-flow-logs"
+    }
+  )
+}

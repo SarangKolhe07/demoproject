@@ -3,15 +3,17 @@
 module "networking" {
   source = "./modules/networking"
 
-  project_name            = var.project_name
-  vpc_cidr                = var.vpc_cidr
-  availability_zones      = var.availability_zones
-  az_count                = var.az_count
-  public_subnet_cidrs     = var.public_subnet_cidrs
-  private_subnet_cidrs    = var.private_subnet_cidrs
-  database_subnet_cidrs   = var.database_subnet_cidrs
-  create_database_subnets = var.create_database_subnets
-  tags                    = local.common_tags
+  project_name                = var.project_name
+  vpc_cidr                    = var.vpc_cidr
+  availability_zones          = var.availability_zones
+  az_count                    = var.az_count
+  public_subnet_cidrs         = var.public_subnet_cidrs
+  private_subnet_cidrs        = var.private_subnet_cidrs
+  database_subnet_cidrs       = var.database_subnet_cidrs
+  create_database_subnets     = var.create_database_subnets
+  tags                        = local.common_tags
+  vpc_flow_logs_log_group_arn = module.monitoring.vpc_flow_logs_log_group_arn
+  vpc_flow_logs_iam_role_arn  = aws_iam_role.vpc_flow_logs_role.arn
 }
 
 module "security" {
@@ -99,17 +101,17 @@ module "iam" {
 }
 
 
-resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
-  name              = "${var.project_name}-vpc-flow-logs"
-  retention_in_days = 14
+# resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
+#   name              = "${var.project_name}-vpc-flow-logs"
+#   retention_in_days = 14
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${var.project_name}-vpc-flow-logs"
-    }
-  )
-}
+#   tags = merge(
+#     local.common_tags,
+#     {
+#       Name = "${var.project_name}-vpc-flow-logs"
+#     }
+#   )
+# }
 
 resource "aws_iam_role" "vpc_flow_logs_role" {
   name = "${var.project_name}-vpc-flow-logs-role"
@@ -148,13 +150,13 @@ resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
   })
 }
 
-resource "aws_flow_log" "vpc_flow" {
-  vpc_id               = module.networking.vpc_id
-  traffic_type         = "ALL"
-  log_destination_type = "cloud-watch-logs"
-  log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
-  iam_role_arn         = aws_iam_role.vpc_flow_logs_role.arn
-}
+# resource "aws_flow_log" "vpc_flow" {
+#   vpc_id               = module.networking.vpc_id
+#   traffic_type         = "ALL"
+#   log_destination_type = "cloud-watch-logs"
+#   log_destination      = module.monitoring.vpc_flow_logs_log_group_arn
+#   iam_role_arn         = aws_iam_role.vpc_flow_logs_role.arn
+# }
 
 locals {
   common_tags = {
