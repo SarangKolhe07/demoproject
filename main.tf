@@ -88,6 +88,7 @@ module "monitoring" {
   target_group_arn_suffix = module.loadbalancer.target_group_arn_suffix
   auto_scaling_group_name = module.compute.asg_name
   tags                    = local.common_tags
+  alert_email             = var.alert_email
 }
 
 module "iam" {
