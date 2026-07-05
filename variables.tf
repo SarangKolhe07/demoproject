@@ -98,6 +98,11 @@ variable "alert_email" {
   type        = string
   default     = ""
 }
+variable "acm_certificate_arn" {
+  description = "ACM certificate ARN for the ALB HTTPS listener on port 443 (optional; leave empty to skip HTTPS listener)"
+  type        = string
+  default     = ""
+}
 # variable "tls_certificate_pem" {
 #   description = "PEM-encoded certificate body for instances (optional)"
 #   type        = string
