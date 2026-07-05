@@ -92,6 +92,12 @@ variable "min_size" {
   description = "Minimum number of instances"
   type        = number
 }
+
+variable "alert_email" {
+  description = "Email address to receive alerts (SNS subscription). A confirmation email will be sent.)"
+  type        = string
+  default     = ""
+}
 # variable "tls_certificate_pem" {
 #   description = "PEM-encoded certificate body for instances (optional)"
 #   type        = string
