@@ -15,6 +15,7 @@ on:
         options:
           - dev
           - prod
+      
       action:
         description: 'Terraform action'
         required: true
@@ -55,8 +56,15 @@ jobs:
             echo "TF_ENVIRONMENT=dev" >> $GITHUB_ENV
           fi
 
+      - name: Optionally generate self-signed cert
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.generate_cert == 'true' }}
+        run: |
+          chmod +x ./scripts/generate_self_signed_cert.sh
+          ./scripts/generate_self_signed_cert.sh "$TF_ENVIRONMENT" ".certs" "environments/${TF_ENVIRONMENT}/terraform.tfvars"
+        shell: bash
+
       - name: Terraform init
-        run: terraform init -reconfigure
+        run: terraform init -upgrade -backend=false -input=false
 
   validate:
     name: Terraform validate
@@ -79,7 +87,7 @@ jobs:
         run: terraform fmt -check -diff
 
       - name: Terraform init
-        run: terraform init -backend=false
+        run: terraform init -upgrade -backend=false -input=false
 
       - name: Terraform validate
         run: terraform validate
@@ -116,11 +124,13 @@ jobs:
           fi
 
       - name: Terraform init
-        run: terraform init -reconfigure
+        run: terraform init -upgrade -reconfigure -input=false
+
+      - name: Select workspace
+        run: terraform workspace select -or-create "$TF_ENVIRONMENT"
 
       - name: Terraform plan
         run: |
-          terraform workspace select -or-create "$TF_ENVIRONMENT"
           if [ "$TF_ENVIRONMENT" = "dev" ]; then
             terraform plan -var-file=environments/dev/terraform.tfvars -out=tfplan
           else
@@ -133,21 +143,23 @@ jobs:
           name: terraform-plan
           path: tfplan
 
-  approval:
+  manual_approval:
     name: Manual approval
     runs-on: ubuntu-latest
-    needs: plan
+    needs: [plan]
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.action == 'apply' || github.event.inputs.action == 'destroy')
     environment:
       name: ${{ github.event.inputs.environment }}
     steps:
-      - name: Wait for approval
-        run: echo "Approval gate for ${{ github.event.inputs.action }} on ${{ github.event.inputs.environment }}"
+      - name: Await approval
+        run: echo "Waiting for manual approval via GitHub Environment"
+
+  # Manual approval is handled by requiring the GitHub Environment on the job
 
   apply:
     name: Terraform apply
     runs-on: ubuntu-latest
-    needs: [plan, approval]
+    needs: [plan, manual_approval]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -172,7 +184,7 @@ jobs:
           echo "TF_ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
 
       - name: Terraform init
-        run: terraform init -reconfigure
+        run: terraform init -upgrade -reconfigure -input=false
 
       - name: Terraform apply
         run: |
@@ -182,7 +194,7 @@ jobs:
   destroy:
     name: Terraform destroy
     runs-on: ubuntu-latest
-    needs: [plan, approval]
+    needs: [plan, manual_approval]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -202,7 +214,7 @@ jobs:
           echo "TF_ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
 
       - name: Terraform init
-        run: terraform init -reconfigure
+        run: terraform init -upgrade -reconfigure -input=false
 
       - name: Terraform destroy
         run: |

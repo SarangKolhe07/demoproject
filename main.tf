@@ -30,6 +30,8 @@ module "loadbalancer" {
   public_subnet_ids     = module.networking.public_subnet_ids
   alb_security_group_id = module.security.alb_security_group_id
   tags                  = local.common_tags
+  #   tls_certificate_pem   = var.tls_certificate_pem
+  #   tls_private_key_pem   = var.tls_private_key_pem
 }
 
 module "waf" {
@@ -65,7 +67,11 @@ module "compute" {
   target_group_arn      = module.loadbalancer.target_group_arn
   instance_profile_name = module.iam.instance_profile_name
   environment           = var.environment
-  tags                  = local.common_tags
+  ssh_key_name          = var.ssh_key_name
+  ssh_public_key        = var.ssh_public_key
+  # tls_certificate_pem   = var.tls_certificate_pem
+  # tls_private_key_pem   = var.tls_private_key_pem
+  tags = local.common_tags
 }
 
 module "monitoring" {
@@ -84,6 +90,64 @@ module "iam" {
 
   project_name = var.project_name
   tags         = local.common_tags
+}
+
+
+resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
+  name              = "${var.project_name}-vpc-flow-logs"
+  retention_in_days = 14
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-vpc-flow-logs"
+    }
+  )
+}
+
+resource "aws_iam_role" "vpc_flow_logs_role" {
+  name = "${var.project_name}-vpc-flow-logs-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "vpc-flow-logs.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
+  name = "${var.project_name}-vpc-flow-logs-policy"
+  role = aws_iam_role.vpc_flow_logs_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_flow_log" "vpc_flow" {
+  vpc_id               = module.networking.vpc_id
+  traffic_type         = "ALL"
+  log_destination_type = "cloud-watch-logs"
+  log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
+  iam_role_arn         = aws_iam_role.vpc_flow_logs_role.arn
 }
 
 locals {
