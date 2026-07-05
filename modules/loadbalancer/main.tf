@@ -11,12 +11,13 @@ resource "aws_lb" "paymentology_alb" {
 
 resource "aws_lb_target_group" "web" {
   name     = "${var.project_name}-tg"
-  port     = 80
-  protocol = "HTTP"
+  port     = 443
+  protocol = "HTTPS"
   vpc_id   = var.vpc_id
 
   health_check {
     path                = "/"
+    protocol            = "HTTPS"
     matcher             = "200"
     interval            = 30
     timeout             = 5
