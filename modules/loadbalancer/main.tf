@@ -30,14 +30,14 @@ resource "aws_lb_target_group" "web" {
    the HTTPS listener can be created. */
 
 # Import or use provided TLS certificate for HTTPS listener
-# resource "aws_acm_certificate" "imported" {
-#   count            = var.tls_certificate_arn == "" && var.tls_certificate_pem != "" ? 1 : 0
-#   private_key      = var.tls_private_key_pem
-#   certificate_body = var.tls_certificate_pem
-#   certificate_chain = var.tls_certificate_chain_pem != "" ? var.tls_certificate_chain_pem : null
+resource "aws_acm_certificate" "imported" {
+  count            = var.tls_certificate_arn == "" && var.tls_certificate_pem != "" ? 1 : 0
+  private_key      = var.tls_private_key_pem
+  certificate_body = var.tls_certificate_pem
+  certificate_chain = var.tls_certificate_chain_pem != "" ? var.tls_certificate_chain_pem : null
 
-#   tags = merge(var.tags, { Name = "${var.project_name}-imported-cert" })
-# }
+  tags = merge(var.tags, { Name = "${var.project_name}-imported-cert" })
+}
 
 # Create HTTPS listener if certificate available
 resource "aws_lb_listener" "https" {
