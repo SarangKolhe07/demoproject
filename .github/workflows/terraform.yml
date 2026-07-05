@@ -190,14 +190,6 @@ jobs:
         run: |
           terraform workspace select -or-create "$TF_ENVIRONMENT"
           terraform apply -auto-approve tfplan
-
-      - name: Display Terraform Outputs
-        if: success()
-        run: |
-          echo "###Terraform Infrastructure Outputs" >> $GITHUB_STEP_SUMMARY
-          echo '```hcl' >> $GITHUB_STEP_SUMMARY
-          terraform output >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
   destroy:
     name: Terraform destroy
     runs-on: ubuntu-latest

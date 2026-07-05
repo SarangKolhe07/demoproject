@@ -71,7 +71,7 @@ module "compute" {
   ssh_key_name          = var.ssh_key_name
   ssh_public_key        = var.ssh_public_key
   instance_type         = var.instance_type
-  desired_capacity      = var.desired_capacity  
+  desired_capacity      = var.desired_capacity
   max_size              = var.max_size
   min_size              = var.min_size
   # tls_certificate_pem   = var.tls_certificate_pem
