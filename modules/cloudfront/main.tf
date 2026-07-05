@@ -50,3 +50,4 @@ resource "aws_cloudfront_distribution" "paymentology_distribution" {
 
   tags = var.tags
 }
+

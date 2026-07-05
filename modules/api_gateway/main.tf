@@ -83,3 +83,4 @@ resource "aws_api_gateway_stage" "paymentology_stage" {
   deployment_id = aws_api_gateway_deployment.paymentology_deployment.id
   stage_name    = var.stage_name
 }
+
