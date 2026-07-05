@@ -13,7 +13,7 @@ module "networking" {
   create_database_subnets     = var.create_database_subnets
   tags                        = local.common_tags
   vpc_flow_logs_log_group_arn = module.monitoring.vpc_flow_logs_log_group_arn
-  vpc_flow_logs_iam_role_arn  = aws_iam_role.vpc_flow_logs_role.arn
+  vpc_flow_logs_iam_role_arn  = module.iam.vpc_flow_logs_role_arn
 }
 
 module "security" {
@@ -113,42 +113,42 @@ module "iam" {
 #   )
 # }
 
-resource "aws_iam_role" "vpc_flow_logs_role" {
-  name = "${var.project_name}-vpc-flow-logs-role"
+# resource "aws_iam_role" "vpc_flow_logs_role" {
+#   name = "${var.project_name}-vpc-flow-logs-role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
-        Principal = {
-          Service = "vpc-flow-logs.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole",
+#         Effect = "Allow",
+#         Principal = {
+#           Service = "vpc-flow-logs.amazonaws.com"
+#         }
+#       }
+#     ]
+#   })
+# }
 
-resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
-  name = "${var.project_name}-vpc-flow-logs-policy"
-  role = aws_iam_role.vpc_flow_logs_role.id
+# resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
+#   name = "${var.project_name}-vpc-flow-logs-policy"
+#   role = aws_iam_role.vpc_flow_logs_role.id
 
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:CreateLogGroup"
-        ],
-        Resource = "*"
-      }
-    ]
-  })
-}
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "logs:CreateLogStream",
+#           "logs:PutLogEvents",
+#           "logs:CreateLogGroup"
+#         ],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
 
 # resource "aws_flow_log" "vpc_flow" {
 #   vpc_id               = module.networking.vpc_id
