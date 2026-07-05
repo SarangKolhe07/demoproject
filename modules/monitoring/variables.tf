@@ -32,5 +32,5 @@ variable "tags" {
 variable "alert_email" {
   description = "Email address to receive alerts (SNS subscription). A confirmation email will be sent.)"
   type        = string
-  default     = "sarang.kolhe79@gmail.com"
+  default     = ""
 }

@@ -6,25 +6,22 @@ variable "project_name" {
 variable "instance_type" {
   description = "EC2 instance size"
   type        = string
-  default     = "t3.micro"
+  default     = ""
 }
 
 variable "desired_capacity" {
   description = "Desired number of instances"
   type        = number
-  default     = 2
 }
 
 variable "max_size" {
   description = "Maximum number of instances"
   type        = number
-  default     = 3
 }
 
 variable "min_size" {
   description = "Minimum number of instances"
   type        = number
-  default     = 2
 }
 
 variable "private_subnet_ids" {
@@ -50,7 +47,7 @@ variable "instance_profile_name" {
 variable "environment" {
   description = "Deployment environment for instance user data"
   type        = string
-  default     = "dev"
+  default     = ""
 }
 
 variable "ssh_key_name" {

@@ -20,6 +20,7 @@ module "security" {
   project_name = var.project_name
   vpc_id       = module.networking.vpc_id
   tags         = local.common_tags
+  ingressport  = var.ingressport
 }
 
 module "loadbalancer" {
@@ -69,6 +70,10 @@ module "compute" {
   environment           = var.environment
   ssh_key_name          = var.ssh_key_name
   ssh_public_key        = var.ssh_public_key
+  instance_type         = var.instance_type
+  desired_capacity      = var.desired_capacity  
+  max_size              = var.max_size
+  min_size              = var.min_size
   # tls_certificate_pem   = var.tls_certificate_pem
   # tls_private_key_pem   = var.tls_private_key_pem
   tags = local.common_tags
