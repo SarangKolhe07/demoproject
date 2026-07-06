@@ -32,6 +32,38 @@ cat > /opt/aws/amazon-cloudwatch-agent/bin/config.json <<'EOF'
         "metrics_collection_interval": 60
       }
     }
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/httpd/access_log",
+            "log_group_name": "/aws/asg/${app_name}-web",
+            "log_stream_name": "{instance_id}/httpd/access",
+            "retention_in_days": 30
+          },
+          {
+            "file_path": "/var/log/httpd/error_log",
+            "log_group_name": "/aws/asg/${app_name}-web",
+            "log_stream_name": "{instance_id}/httpd/error",
+            "retention_in_days": 30
+          },
+          {
+            "file_path": "/var/log/messages",
+            "log_group_name": "/aws/asg/${app_name}-web",
+            "log_stream_name": "{instance_id}/system",
+            "retention_in_days": 30
+          },
+          {
+            "file_path": "/var/log/cloud-init-output.log",
+            "log_group_name": "/aws/asg/${app_name}-web",
+            "log_stream_name": "{instance_id}/cloud-init",
+            "retention_in_days": 30
+          }
+        ]
+      }
+    }
   }
 }
 EOF
