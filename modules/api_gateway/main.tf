@@ -26,9 +26,12 @@ resource "aws_api_gateway_integration" "root_any" {
   http_method             = aws_api_gateway_method.root_any.http_method
   integration_http_method = "ANY"
   type                    = "HTTP"
-  uri                     = "http://${var.alb_dns_name}"
+  uri                     = "http://${var.alb_dns_name}/index.html"
   passthrough_behavior    = "WHEN_NO_MATCH"
   connection_type         = "INTERNET"
+  request_parameters = {
+    "integration.request.header.Host" = "'${var.alb_dns_name}'"
+  }
 }
 
 resource "aws_api_gateway_method" "proxy_any" {
@@ -54,6 +57,7 @@ resource "aws_api_gateway_integration" "proxy_any" {
 
   request_parameters = {
     "integration.request.path.proxy" = "method.request.path.proxy"
+    "integration.request.header.Host" = "'${var.alb_dns_name}'"
   }
 }
 
@@ -62,11 +66,11 @@ resource "aws_api_gateway_deployment" "paymentology_deployment" {
   rest_api_id = aws_api_gateway_rest_api.paymentology_api.id
 
   triggers = {
-    redeployment = sha1(join("|", [
-      aws_api_gateway_method.root_any.http_method,
-      aws_api_gateway_method.proxy_any.http_method,
-      aws_api_gateway_integration.root_any.uri,
-      aws_api_gateway_integration.proxy_any.uri,
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_method.root_any,
+      aws_api_gateway_method.proxy_any,
+      aws_api_gateway_integration.root_any,
+      aws_api_gateway_integration.proxy_any,
       var.stage_name,
     ]))
   }
@@ -75,6 +79,9 @@ resource "aws_api_gateway_deployment" "paymentology_deployment" {
     aws_api_gateway_integration.root_any,
     aws_api_gateway_integration.proxy_any,
   ]
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Create the API Gateway stage for the deployment
