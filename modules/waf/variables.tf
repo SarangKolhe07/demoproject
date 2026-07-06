@@ -13,3 +13,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "log_retention_in_days" {
+  description = "Retention period (in days) for WAF CloudWatch log groups"
+  type        = number
+  default     = 30
+}
