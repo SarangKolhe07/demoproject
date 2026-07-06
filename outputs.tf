@@ -33,7 +33,7 @@ output "monitoring_log_group" {
   value       = module.monitoring.log_group_name
 }
 
-output "compute_ssh_key_name" {
-  description = "SSH key name used by compute instances (from module.compute)"
-  value       = module.compute.ssh_key_name
-}
+# output "compute_ssh_key_name" {
+#   description = "SSH key name used by compute instances (from module.compute)"
+#   value       = module.compute.ssh_key_name
+# }

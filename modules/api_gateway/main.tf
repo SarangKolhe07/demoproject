@@ -47,7 +47,7 @@ resource "aws_api_gateway_integration" "proxy_any" {
   resource_id             = aws_api_gateway_resource.proxy.id
   http_method             = aws_api_gateway_method.proxy_any.http_method
   integration_http_method = "ANY"
-  type                    = "HTTP"
+  type                    = "HTTP_PROXY"
   uri                     = "http://${var.alb_dns_name}/{proxy}"
   passthrough_behavior    = "WHEN_NO_MATCH"
   connection_type         = "INTERNET"
