@@ -81,10 +81,10 @@ cd demoproject
 ```
 Internet
    │
-   ├── CloudFront (CDN + WAF)            ──▶ ALB HTTP :80  (matched by "Via" header rule)
+   ├── CloudFront (CDN + WAF):443           ──▶ ALB HTTP :80  (matched by "Via" header rule)
    │                                            └── Auto Scaling Group (private subnets)
    │
-   ├── API Gateway (REST, proxy)         ──▶ ALB HTTP :80  (matched by "User-Agent" header rule)
+   ├── API Gateway (REST, proxy):443         ──▶ ALB HTTP :80  (matched by "User-Agent" header rule)
    │                                            └── Auto Scaling Group (private subnets)
    │
    └── Direct browser access
@@ -181,15 +181,7 @@ Typical outbound use cases from web instances:
 
 **Outbound path from database subnets**
 
-Database subnets (when `create_database_subnets = true`) use the same NAT Gateway for outbound traffic. They are isolated from public inbound access and are reserved for future database workloads (e.g. RDS).
-
-```
-Database subnet (future RDS)
-  → Database route table (0.0.0.0/0 → NAT Gateway)
-  → Regional NAT Gateway
-  → Internet Gateway
-  → Internet
-```
+Database subnets are currently set to (`create_database_subnets = false`) (when set `create_database_subnets = true`) subnets are can be provisioned and in both environments for future RDS or similar services. Reserved for future database workloads (e.g. RDS). It will be isolated from Internet access, will have local VPC access.
 
 **Monitoring and logging (inside → AWS services)**
 
