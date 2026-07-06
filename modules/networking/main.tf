@@ -146,7 +146,7 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-# Single shared database route table — restricted to internet access.
+# Database route table — restricted to internet access.
 resource "aws_route_table" "database" {
   count  = var.create_database_subnets ? 1 : 0
   vpc_id = aws_vpc.paymentology_vpc.id
