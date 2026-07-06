@@ -182,7 +182,7 @@ jobs:
       - name: Terraform apply
         run: |
           terraform workspace select -or-create "$TF_ENVIRONMENT"
-          terraform apply tfplan
+          terraform apply -auto-approve tfplan
   destroy:
     name: Terraform destroy
     runs-on: ubuntu-latest
@@ -211,4 +211,4 @@ jobs:
       - name: Terraform destroy
         run: |
           terraform workspace select -or-create "$TF_ENVIRONMENT"
-          terraform destroy -var-file=environments/${TF_ENVIRONMENT}/terraform.tfvars
+          terraform destroy -var-file=environments/${TF_ENVIRONMENT}/terraform.tfvars -auto-approve
