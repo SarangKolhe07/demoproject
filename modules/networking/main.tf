@@ -146,15 +146,11 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-# Single shared database route table — routes outbound traffic through the Regional NAT GW
+# Single shared database route table — restricted to internet access.
 resource "aws_route_table" "database" {
   count  = var.create_database_subnets ? 1 : 0
   vpc_id = aws_vpc.paymentology_vpc.id
 
-  # route {
-  #   cidr_block     = "0.0.0.0/0"
-  #   nat_gateway_id = aws_nat_gateway.paymentology_nat.id
-  # }
 
   tags = merge(
     var.tags,
