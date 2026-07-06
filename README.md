@@ -1,6 +1,6 @@
 # Paymentology AWS Infrastructure
 
-Terraform project that provisions a multi-tier web application on AWS. The stack includes networking, security groups, an Application Load Balancer (ALB), AWS WAF, CloudFront, API Gateway, Auto Scaling compute, IAM roles, and CloudWatch monitoring with SNS alerts.
+Terraform project that provisions a multi-tier web application on AWS. The stack includes networking, security groups, an Application Load Balancer (ALB), AWS WAF, CloudFront, API Gateway, Auto Scaling compute, IAM roles, and CloudWatch observability (metrics, centralized application/system logs, and SNS email alerts).
 
 ## Table of Contents
 
@@ -102,45 +102,6 @@ The ALB listens on port 80 and port 443. The **port 80 listener redirects all tr
 
 The **port 443 (HTTPS) listener** is created only when `acm_certificate_arn` is set, and forwards directly to the target group.
 
-### End-to-end flow diagram
-
-```mermaid
-flowchart TB
-  subgraph inbound["Outside → Inside (Inbound)"]
-    User["Internet / Users"]
-    CF["CloudFront + WAF"]
-    APIGW["API Gateway"]
-    ALB80["ALB HTTP :80 listener\n(public subnets)\ndefault: redirect → HTTPS"]
-    ALB443["ALB HTTPS :443 listener\n(public subnets)"]
-    WAF["Regional WAF\n(attached to ALB)"]
-    TG["Target Group\nHTTP :80"]
-    EC2["EC2 / Apache\n(private subnets)"]
-
-    User -->|"HTTPS"| CF
-    User -->|"HTTPS"| APIGW
-    User -->|"HTTP :80"| ALB80
-    User -->|"HTTPS :443"| ALB443
-    CF -->|"HTTP :80 (Via header)"| ALB80
-    APIGW -->|"HTTP proxy (User-Agent)"| ALB80
-    ALB80 -->|"301 redirect"| ALB443
-    ALB80 -->|"rule match → forward"| TG
-    ALB443 -->|"forward"| TG
-    WAF -.->|"inspects"| ALB80
-    WAF -.->|"inspects"| ALB443
-    TG --> EC2
-  end
-
-  subgraph outbound["Inside → Outside (Outbound)"]
-    EC2out["EC2 instances\n(private subnets)"]
-    NAT["Regional NAT Gateway"]
-    IGW["Internet Gateway"]
-    Ext["Internet / AWS endpoints"]
-
-    EC2out --> NAT --> IGW --> Ext
-  end
-
-  EC2 -.-> EC2out
-```
 
 ### Traffic flow: outside → inside (inbound)
 
@@ -207,7 +168,7 @@ EC2 instance in private subnet
   → Private route table (0.0.0.0/0 → NAT Gateway)
   → Regional NAT Gateway
   → Internet Gateway (IGW)
-  → Internet / AWS public endpoints
+  → Internet
 ```
 
 Typical outbound use cases from web instances:
@@ -239,14 +200,27 @@ VPC Flow Logs        → CloudWatch Logs (via IAM role)
 ALB / ASG metrics    → CloudWatch Metrics
 CloudWatch Alarms    → SNS topic → alert_email (email confirmation required)
 EC2 CloudWatch agent → CloudWatch Metrics (namespace: CWAgent)
+EC2 CloudWatch agent → CloudWatch Logs (httpd + system + cloud-init log streams)
+WAF (CloudFront/ALB) → CloudWatch Logs (aws-waf-logs-* groups)
 ```
+
+The CloudWatch agent installed by `user_data.sh` publishes both **metrics** (`mem_used_percent`, `used_percent` in the `CWAgent` namespace) and **logs**. It tails the following files on each EC2 instance and ships them to the `/aws/asg/<project_name>-web` log group, using the instance ID as the log stream prefix:
+
+| Log file on instance | Log stream | Purpose |
+|----------------------|-----------|---------|
+| `/var/log/httpd/access_log` | `{instance_id}/httpd/access` | Apache access log |
+| `/var/log/httpd/error_log` | `{instance_id}/httpd/error` | Apache error log |
+| `/var/log/messages` | `{instance_id}/system` | OS / system messages |
+| `/var/log/cloud-init-output.log` | `{instance_id}/cloud-init` | Bootstrap (`user_data.sh`) output |
 
 **CloudWatch log groups**
 
 | Log group | Retention | Source |
 |-----------|-----------|--------|
-| `/aws/asg/<project_name>-web` | 30 days | Web tier / Auto Scaling Group |
+| `/aws/asg/<project_name>-web` | 30 days | Web tier — CloudWatch agent ships httpd access/error, system, and cloud-init logs |
 | `<project_name>-vpc-flow-logs` | 14 days | VPC Flow Logs (all traffic) |
+| `aws-waf-logs-<project_name>-cloudfront` | 30 days | CloudFront-scope WAF request logs |
+| `aws-waf-logs-<project_name>-alb` | 30 days | Regional (ALB) WAF request logs |
 
 **CloudWatch metric alarms** (all publish to the SNS topic `<project_name>-alerts`)
 
@@ -286,7 +260,7 @@ demoproject/
 │   ├── api_gateway/
 │   ├── compute/
 │   │   └── templates/
-│   │       └── user_data.sh   # EC2 bootstrap (Apache, CloudWatch agent, optional TLS)
+│   │       └── user_data.sh   # EC2 bootstrap (Apache, CloudWatch agent metrics + logs, optional TLS)
 │   ├── iam/
 │   └── monitoring/
 └── .github/workflows/
@@ -301,7 +275,7 @@ demoproject/
 | `waf` | WAFv2 web ACLs (CLOUDFRONT + REGIONAL scopes) using the AWS managed common rule set |
 | `cloudfront` | CDN distribution in front of the ALB (http-only origin, redirect-to-https viewer) |
 | `api_gateway` | Regional REST API with `{proxy+}` and root proxy integrations to the ALB |
-| `compute` | Launch template (Amazon Linux 2), Auto Scaling Group, and `user_data.sh` bootstrap |
+| `compute` | Launch template (Amazon Linux 2), Auto Scaling Group, and `user_data.sh` bootstrap (Apache, CloudWatch agent for metrics **and** logs, optional TLS) |
 | `iam` | EC2 instance role/profile (SSM + CloudWatch agent) and VPC flow log role |
 | `monitoring` | CloudWatch log groups, metric alarms, and SNS email notifications |
 
