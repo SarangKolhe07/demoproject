@@ -3,11 +3,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "alb_name" {
-  description = "Application Load Balancer name for ALB CloudWatch metrics"
-  type        = string
-}
-
 variable "alb_arn_suffix" {
   description = "Application Load Balancer ARN suffix for CloudWatch dimensions"
   type        = string
