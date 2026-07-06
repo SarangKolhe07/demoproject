@@ -69,11 +69,11 @@ module "compute" {
   target_group_arn      = module.loadbalancer.target_group_arn
   instance_profile_name = module.iam.instance_profile_name
   environment           = var.environment
-  instance_type    = var.instance_type
-  desired_capacity = var.desired_capacity
-  max_size         = var.max_size
-  min_size         = var.min_size
-  tags             = local.common_tags
+  instance_type         = var.instance_type
+  desired_capacity      = var.desired_capacity
+  max_size              = var.max_size
+  min_size              = var.min_size
+  tags                  = local.common_tags
 }
 
 module "monitoring" {
