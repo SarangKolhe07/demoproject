@@ -101,7 +101,7 @@ flowchart TB
 
     User -->|"HTTPS"| CF
     User -->|"HTTPS"| APIGW
-    User -->|"HTTPS/HTTP"| ALB
+    User -->|"HTTPS"| ALB
     CF -->|"HTTP :80"| ALB
     APIGW -->|"HTTP proxy"| ALB
     ALB --> TG --> EC2
