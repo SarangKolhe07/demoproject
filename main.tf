@@ -75,7 +75,7 @@ module "compute" {
   desired_capacity      = var.desired_capacity
   max_size              = var.max_size
   min_size              = var.min_size
-  tags = local.common_tags
+  tags                  = local.common_tags
 }
 
 module "monitoring" {
