@@ -100,6 +100,7 @@ resource "aws_nat_gateway" "paymentology_nat" {
 }
 
 
+
 # Create the public route table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.paymentology_vpc.id
@@ -165,4 +166,3 @@ resource "aws_route_table_association" "database" {
   subnet_id      = aws_subnet.database[count.index].id
   route_table_id = aws_route_table.database[0].id
 }
-
