@@ -42,6 +42,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.5.7
+          terraform_wrapper: false
 
       - name: Determine environment
         id: env
@@ -75,7 +76,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.5.7
-
+          terraform_wrapper: false
       - name: Format check
         run: terraform fmt -check -diff
 
@@ -102,7 +103,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.5.7
-
+          terraform_wrapper: false
       - name: Determine environment
         id: env
         run: |
@@ -166,7 +167,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.5.7
-
+          terraform_wrapper: false
       - name: Download plan
         uses: actions/download-artifact@v4
         with:
@@ -204,6 +205,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.5.7
+          terraform_wrapper: false
 
       - name: Determine environment
         run: |
