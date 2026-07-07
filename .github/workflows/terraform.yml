@@ -176,10 +176,6 @@ jobs:
         run: |
           echo "TF_ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
 
-      - name: Determine environment
-        run: |
-          echo "TF_ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
-
       - name: Terraform init
         run: terraform init -upgrade -reconfigure -input=false
 
