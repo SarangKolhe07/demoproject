@@ -240,7 +240,7 @@ demoproject/
 ├── outputs.tf              # Root output definitions
 ├── providers.tf            # AWS provider configuration
 ├── backend.tf              # S3 remote state and provider version constraints
-├── environments/
+├── environments/           # Terraform Workspace environments
 │   ├── dev/terraform.tfvars
 │   └── prod/terraform.tfvars
 ├── modules/
