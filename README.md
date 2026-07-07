@@ -84,7 +84,7 @@ Internet
    ├── CloudFront (CDN + WAF):443           ──▶ ALB HTTP :80  (matched by "Via" header rule)
    │                                            └── Auto Scaling Group (private subnets)
    │
-   ├── API Gateway (REST, proxy):443         ──▶ ALB HTTP :80  (matched by "User-Agent" header rule)
+   ├── API Gateway (REST, proxy + WAF):443         ──▶ ALB HTTP :80  (matched by "User-Agent" header rule)
    │                                            └── Auto Scaling Group (private subnets)
    │
    └── Direct browser access
@@ -127,6 +127,7 @@ Internet (HTTPS)
   → API Gateway (Regional REST API, stage = environment name)
   → HTTP / HTTP_PROXY integration over the internet (INTERNET connection type)
   → ALB HTTP :80 listener (Host header rewritten to the ALB DNS name)
+  → WAF (Regional scope — attached to API Gateway)
   → Listener rule priority 2 matches "User-Agent: AmazonAPIGateway_*" → forward
   → ALB target group (HTTP port 80)
   → EC2 instance in private subnet
@@ -193,7 +194,7 @@ ALB / ASG metrics    → CloudWatch Metrics
 CloudWatch Alarms    → SNS topic → alert_email (email confirmation required)
 EC2 CloudWatch agent → CloudWatch Metrics (namespace: CWAgent)
 EC2 CloudWatch agent → CloudWatch Logs (httpd + system + cloud-init log streams)
-WAF (CloudFront/ALB) → CloudWatch Logs (aws-waf-logs-* groups)
+WAF (CloudFront/API Gateway/ALB) → CloudWatch Logs (aws-waf-logs-* groups)
 ```
 
 The CloudWatch agent installed by `user_data.sh` publishes both **metrics** (`mem_used_percent`, `used_percent` in the `CWAgent` namespace) and **logs**. It tails the following files on each EC2 instance and ships them to the `/aws/asg/<project_name>-web` log group, using the instance ID as the log stream prefix:
