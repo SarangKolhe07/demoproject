@@ -58,6 +58,7 @@ module "api_gateway" {
   alb_dns_name = module.loadbalancer.alb_dns_name
   stage_name   = var.environment
   tags         = local.common_tags
+  web_acl_arn  = module.waf.alb_web_acl_arn
 }
 
 module "compute" {

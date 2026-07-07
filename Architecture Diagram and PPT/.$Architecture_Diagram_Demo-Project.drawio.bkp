@@ -20,7 +20,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="LqA7SrApsW2XsXgQkjyV-100" parent="13SS4opu22BGOfwFeK1y-1" style="fillColor=none;strokeColor=#5A6C86;dashed=1;verticalAlign=top;fontStyle=0;fontColor=#5A6C86;whiteSpace=wrap;html=1;" value="" vertex="1">
-          <mxGeometry height="104" width="356" x="657" y="10.25" as="geometry" />
+          <mxGeometry height="104" width="356" x="652" y="10.25" as="geometry" />
         </mxCell>
         <mxCell id="LqA7SrApsW2XsXgQkjyV-101" parent="13SS4opu22BGOfwFeK1y-1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CloudFront&lt;/font&gt;" vertex="1">
           <mxGeometry height="30" width="60" x="700.5" y="88" as="geometry" />
@@ -150,27 +150,6 @@
             <mxPoint x="1011.004772978959" y="99" as="sourcePoint" />
             <mxPoint x="1560" y="791" as="targetPoint" />
           </mxGeometry>
-        </mxCell>
-        <mxCell id="MvIbZ8MFjiWCbTvWbycu-2" parent="13SS4opu22BGOfwFeK1y-1" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.waf;" value="" vertex="1">
-          <mxGeometry height="54.5" width="54.5" x="244" y="53.5" as="geometry" />
-        </mxCell>
-        <mxCell id="MvIbZ8MFjiWCbTvWbycu-4" edge="1" parent="13SS4opu22BGOfwFeK1y-1" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" value="">
-          <mxGeometry height="50" relative="1" width="50" as="geometry">
-            <mxPoint x="300" y="81.75" as="sourcePoint" />
-            <mxPoint x="397" y="81.75" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="MvIbZ8MFjiWCbTvWbycu-3" parent="13SS4opu22BGOfwFeK1y-1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Attached&lt;/font&gt;" vertex="1">
-          <mxGeometry height="30" width="60" x="305.5" y="53.75" as="geometry" />
-        </mxCell>
-        <mxCell id="MvIbZ8MFjiWCbTvWbycu-7" parent="13SS4opu22BGOfwFeK1y-1" style="fillColor=none;strokeColor=#5A6C86;dashed=1;verticalAlign=top;fontStyle=0;fontColor=#5A6C86;whiteSpace=wrap;html=1;" value="" vertex="1">
-          <mxGeometry height="104" width="356" x="157.5" y="28.75" as="geometry" />
-        </mxCell>
-        <mxCell id="apigw-label" parent="13SS4opu22BGOfwFeK1y-1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;API Gateway&lt;br&gt;(Regional REST API)&lt;/font&gt;" vertex="1">
-          <mxGeometry height="40" width="170" x="276" y="133" as="geometry" />
-        </mxCell>
-        <mxCell id="MvIbZ8MFjiWCbTvWbycu-8" parent="13SS4opu22BGOfwFeK1y-1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="WAF" vertex="1">
-          <mxGeometry height="30" width="60" x="233" y="108" as="geometry" />
         </mxCell>
         <mxCell id="LqA7SrApsW2XsXgQkjyV-3" parent="1" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=0;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_region;strokeColor=#00A4A6;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#147EBA;dashed=1;" value="Region - us-east-1" vertex="1">
           <mxGeometry height="913" width="931" x="-282" y="-170" as="geometry" />
@@ -595,6 +574,9 @@
         <mxCell id="apigw-icon" parent="1" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#E7157B;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;fontFamily=Helvetica;labelBackgroundColor=default;" value="" vertex="1">
           <mxGeometry height="78" width="78" x="-63.00000000000006" y="-476" as="geometry" />
         </mxCell>
+        <mxCell id="apigw-label" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;API Gateway&lt;br&gt;(Regional REST API)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="170" x="-197" y="-390" as="geometry" />
+        </mxCell>
         <mxCell id="apigw-edge-in" edge="1" parent="1" source="LqA7SrApsW2XsXgQkjyV-93" style="endArrow=classic;html=1;rounded=0;strokeColor=#FF33FF;strokeWidth=3;dashed=1;" target="apigw-icon" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
             <mxPoint x="290" y="-470" as="sourcePoint" />
@@ -654,7 +636,7 @@
           <mxGeometry height="15" width="148" x="231" y="-634" as="geometry" />
         </mxCell>
         <mxCell id="LqA7SrApsW2XsXgQkjyV-178" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Internet traffic&lt;/font&gt;" vertex="1">
-          <mxGeometry height="15" width="148" x="-67" y="-586" as="geometry" />
+          <mxGeometry height="15" width="148" x="-54" y="-585" as="geometry" />
         </mxCell>
         <mxCell id="agWU3ltDCBHqL99iit6w-9" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;X&lt;/font&gt;" vertex="1">
           <mxGeometry height="16" width="34" x="51" y="-615" as="geometry" />

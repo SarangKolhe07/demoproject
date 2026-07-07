@@ -91,3 +91,10 @@ resource "aws_api_gateway_stage" "paymentology_stage" {
   stage_name    = var.stage_name
 }
 
+# Associate a regional WAFv2 Web ACL with the API Gateway stage
+resource "aws_wafv2_web_acl_association" "api_gateway" {
+  count        = var.enable_waf ? 1 : 0
+  resource_arn = aws_api_gateway_stage.paymentology_stage.arn
+  web_acl_arn  = var.web_acl_arn
+}
+
