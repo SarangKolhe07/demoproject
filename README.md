@@ -1,4 +1,4 @@
-# Paymentology AWS Infrastructure
+# Paymentology AWS Infrastructure - Demo Project
 
 Terraform project that provisions a multi-tier web application on AWS. The stack includes networking, security groups, an Application Load Balancer (ALB), AWS WAF, CloudFront, API Gateway, Auto Scaling compute, IAM roles, and CloudWatch observability (metrics, centralized application/system logs, and SNS email alerts).
 
