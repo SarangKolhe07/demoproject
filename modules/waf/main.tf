@@ -74,3 +74,28 @@ resource "aws_wafv2_web_acl_association" "alb" {
   resource_arn = var.alb_arn
   web_acl_arn  = aws_wafv2_web_acl.regional.arn
 }
+
+# WAF log group names must begin with "aws-waf-logs-" for CloudWatch delivery to work.
+resource "aws_cloudwatch_log_group" "cloudfront" {
+  name              = "aws-waf-logs-${var.project_name}-cloudfront"
+  retention_in_days = var.log_retention_in_days
+
+  tags = merge(var.tags, { Name = "${var.project_name}-cloudfront-waf-logs" })
+}
+
+resource "aws_cloudwatch_log_group" "regional" {
+  name              = "aws-waf-logs-${var.project_name}-alb"
+  retention_in_days = var.log_retention_in_days
+
+  tags = merge(var.tags, { Name = "${var.project_name}-alb-waf-logs" })
+}
+
+resource "aws_wafv2_web_acl_logging_configuration" "cloudfront" {
+  log_destination_configs = [aws_cloudwatch_log_group.cloudfront.arn]
+  resource_arn            = aws_wafv2_web_acl.cloudfront.arn
+}
+
+resource "aws_wafv2_web_acl_logging_configuration" "regional" {
+  log_destination_configs = [aws_cloudwatch_log_group.regional.arn]
+  resource_arn            = aws_wafv2_web_acl.regional.arn
+}

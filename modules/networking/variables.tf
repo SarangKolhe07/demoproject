@@ -6,7 +6,7 @@ variable "project_name" {
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
-  default     = "10.0.0.0/16"
+  default     = ""
 }
 
 variable "availability_zones" {
@@ -17,7 +17,6 @@ variable "availability_zones" {
 variable "az_count" {
   description = "Number of availability zones to use"
   type        = number
-  default     = 2
 }
 
 variable "public_subnet_cidrs" {
@@ -39,11 +38,20 @@ variable "database_subnet_cidrs" {
 variable "create_database_subnets" {
   description = "Whether to create database subnets"
   type        = bool
-  default     = false
 }
 
 variable "tags" {
   description = "Common tags for resources"
   type        = map(string)
   default     = {}
+}
+
+variable "vpc_flow_logs_log_group_arn" {
+  description = "CloudWatch log group ARN for VPC flow logs"
+  type        = string
+}
+
+variable "vpc_flow_logs_iam_role_arn" {
+  description = "IAM role ARN used by VPC flow logs to publish to CloudWatch"
+  type        = string
 }

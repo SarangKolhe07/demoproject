@@ -29,7 +29,7 @@ resource "aws_security_group" "alb" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description = "HTTP from internet"
+    description = "HTTP from internet (CloudFront origin)"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -37,9 +37,9 @@ resource "aws_security_group" "alb" {
   }
 
   ingress {
-    description = "HTTPS from internet"
-    from_port   = 443
-    to_port     = 443
+    description = "HTTPS from internet (direct ALB access)"
+    from_port   = var.ingressport
+    to_port     = var.ingressport
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

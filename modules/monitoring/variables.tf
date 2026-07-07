@@ -3,11 +3,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "alb_name" {
-  description = "Application Load Balancer name for ALB CloudWatch metrics"
-  type        = string
-}
-
 variable "alb_arn_suffix" {
   description = "Application Load Balancer ARN suffix for CloudWatch dimensions"
   type        = string
@@ -27,4 +22,10 @@ variable "tags" {
   description = "Common tags"
   type        = map(string)
   default     = {}
+}
+
+variable "alert_email" {
+  description = "Email address to receive alerts (SNS subscription). A confirmation email will be sent.)"
+  type        = string
+  default     = ""
 }
