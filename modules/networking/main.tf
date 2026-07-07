@@ -1,5 +1,5 @@
 locals {
-  azs = slice(var.availability_zones, 0, var.az_count)
+  azs = slice(var.availability_zones, 0, length(var.availability_zones))
 }
 
 # Create the Paymentology VPC
