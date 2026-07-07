@@ -23,3 +23,15 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "web_acl_arn" {
+  description = "ARN of the regional WAFv2 Web ACL to associate with the API Gateway stage."
+  type        = string
+  default     = ""
+}
+
+variable "enable_waf" {
+  description = "Whether to associate the WAFv2 Web ACL with the API Gateway stage."
+  type        = bool
+  default     = true
+}

@@ -12,10 +12,12 @@ resource "aws_launch_template" "web" {
   name_prefix   = "${var.project_name}-web-"
   image_id      = data.aws_ami.amazon_linux_2.id
   instance_type = var.instance_type
-
+ 
   user_data = base64encode(templatefile("${path.module}/templates/user_data.sh", {
-    app_name     = var.project_name
-    environment  = var.environment
+    app_name    = var.project_name
+    environment = var.environment
+    tls_certificate_pem = var.tls_certificate_pem
+    tls_private_key_pem = var.tls_private_key_pem
   }))
 
   iam_instance_profile {
@@ -31,13 +33,13 @@ resource "aws_launch_template" "web" {
 }
 
 resource "aws_autoscaling_group" "web" {
-  name                     = "${var.project_name}-asg"
-  desired_capacity         = var.desired_capacity
-  max_size                 = var.max_size
-  min_size                 = var.min_size
-  vpc_zone_identifier      = var.private_subnet_ids
-  target_group_arns        = [var.target_group_arn]
-  health_check_type        = "ELB"
+  name                      = "${var.project_name}-asg"
+  desired_capacity          = var.desired_capacity
+  max_size                  = var.max_size
+  min_size                  = var.min_size
+  vpc_zone_identifier       = var.private_subnet_ids
+  target_group_arns         = [var.target_group_arn]
+  health_check_type         = "ELB"
   health_check_grace_period = 120
 
   launch_template {

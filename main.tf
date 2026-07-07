@@ -3,15 +3,17 @@
 module "networking" {
   source = "./modules/networking"
 
-  project_name            = var.project_name
-  vpc_cidr                = var.vpc_cidr
-  availability_zones      = var.availability_zones
-  az_count                = var.az_count
-  public_subnet_cidrs     = var.public_subnet_cidrs
-  private_subnet_cidrs    = var.private_subnet_cidrs
-  database_subnet_cidrs   = var.database_subnet_cidrs
-  create_database_subnets = var.create_database_subnets
-  tags                    = local.common_tags
+  project_name                = var.project_name
+  vpc_cidr                    = var.vpc_cidr
+  availability_zones          = var.availability_zones
+  az_count                    = var.az_count
+  public_subnet_cidrs         = var.public_subnet_cidrs
+  private_subnet_cidrs        = var.private_subnet_cidrs
+  database_subnet_cidrs       = var.database_subnet_cidrs
+  create_database_subnets     = var.create_database_subnets
+  tags                        = local.common_tags
+  vpc_flow_logs_log_group_arn = module.monitoring.vpc_flow_logs_log_group_arn
+  vpc_flow_logs_iam_role_arn  = module.iam.vpc_flow_logs_role_arn
 }
 
 module "security" {
@@ -20,6 +22,7 @@ module "security" {
   project_name = var.project_name
   vpc_id       = module.networking.vpc_id
   tags         = local.common_tags
+  ingressport  = var.ingressport
 }
 
 module "loadbalancer" {
@@ -30,6 +33,7 @@ module "loadbalancer" {
   public_subnet_ids     = module.networking.public_subnet_ids
   alb_security_group_id = module.security.alb_security_group_id
   tags                  = local.common_tags
+  tls_certificate_arn   = var.acm_certificate_arn
 }
 
 module "waf" {
@@ -39,13 +43,13 @@ module "waf" {
   tags         = local.common_tags
 }
 
-# module "cloudfront" {
-#   source             = "./modules/cloudfront"
-#   project_name       = var.project_name
-#   origin_domain_name = module.loadbalancer.alb_dns_name
-#   web_acl_arn        = module.waf.cloudfront_web_acl_arn
-#   tags               = local.common_tags
-# }
+module "cloudfront" {
+  source             = "./modules/cloudfront"
+  project_name       = var.project_name
+  origin_domain_name = module.loadbalancer.alb_dns_name
+  web_acl_arn        = module.waf.cloudfront_web_acl_arn
+  tags               = local.common_tags
+}
 
 module "api_gateway" {
   source       = "./modules/api_gateway"
@@ -54,6 +58,7 @@ module "api_gateway" {
   alb_dns_name = module.loadbalancer.alb_dns_name
   stage_name   = var.environment
   tags         = local.common_tags
+  web_acl_arn  = module.waf.alb_web_acl_arn
 }
 
 module "compute" {
@@ -65,6 +70,10 @@ module "compute" {
   target_group_arn      = module.loadbalancer.target_group_arn
   instance_profile_name = module.iam.instance_profile_name
   environment           = var.environment
+  instance_type         = var.instance_type
+  desired_capacity      = var.desired_capacity
+  max_size              = var.max_size
+  min_size              = var.min_size
   tags                  = local.common_tags
 }
 
@@ -72,11 +81,11 @@ module "monitoring" {
   source = "./modules/monitoring"
 
   project_name            = var.project_name
-  alb_name                = module.loadbalancer.alb_name
   alb_arn_suffix          = module.loadbalancer.alb_arn_suffix
   target_group_arn_suffix = module.loadbalancer.target_group_arn_suffix
   auto_scaling_group_name = module.compute.asg_name
   tags                    = local.common_tags
+  alert_email             = var.alert_email
 }
 
 module "iam" {

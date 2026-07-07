@@ -13,3 +13,8 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "ingressport" {
+  description = "Port for ingress rule from ALB to web tier"
+  type        = number
+}

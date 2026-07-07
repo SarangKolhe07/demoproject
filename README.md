@@ -1,88 +1,497 @@
-# Paymentology Terraform Project
+# Paymentology AWS Infrastructure - Demo Project
 
-This repository provides a modular Terraform baseline for deploying a secure, highly available AWS web application architecture with:
+Terraform project that provisions a multi-tier web application on AWS. The stack includes networking, security groups, an Application Load Balancer (ALB), AWS WAF, CloudFront, API Gateway, Auto Scaling compute, IAM roles, and CloudWatch observability (metrics, centralized application/system logs, and SNS email alerts).
 
-- VPC with public, private, and optional database subnets
-- Application Load Balancer in public subnets
-- EC2 web tier in private subnets behind an Auto Scaling Group
-- API Gateway fronting the ALB for REST API access
-- Optional CloudFront CDN and WAF protection for global delivery and security
-- Security groups following least-privilege principles
-- CloudWatch log group and SNS topic for monitoring and alerting
-- GitHub Actions CI/CD workflow with separate init, validate, plan, approval, apply, and destroy stages
+## Table of Contents
 
-## Architecture summary
+1. [Setup Prerequisites](#setup-prerequisites)
+2. [Architecture Overview](#architecture-overview)
+3. [Project Structure](#project-structure)
+4. [Variable Explanations](#variable-explanations)
+5. [Output Descriptions](#output-descriptions)
+6. [Terraform Deployment Commands](#terraform-deployment-commands)
+7. [Troubleshooting](#troubleshooting)
 
-- Public subnets host the ALB and internet-facing components.
-- Private subnets host the web application instances.
-- Optional database subnets are available for future RDS or similar services.
-- The ALB forwards traffic to the EC2 instances via a target group.
+---
 
-## Prerequisites
+## Setup Prerequisites
 
-- Terraform v1.5+
-- AWS CLI configured with credentials
-- An AWS account with permissions for VPC, EC2, ELB, CloudWatch, and IAM resources
+### Required tools
 
-## Usage
+| Tool | Minimum version | Purpose |
+|------|-----------------|---------|
+| [Terraform](https://developer.hashicorp.com/terraform/install) | `>= 1.5.0` | Infrastructure provisioning |
+| [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | v2 recommended | AWS authentication and resource checks |
+| Git | Any recent version | Clone and manage the repository |
 
-1. Initialize Terraform:
-   ```bash
-   terraform init
-   ```
+> **AWS provider version:** This project pins `hashicorp/aws >= 6.24.0` (see `backend.tf`). This is required for the **regional NAT gateway (auto mode)** used in the networking module — AWS manages the Elastic IPs and expands the gateway across AZs automatically.
 
-2. Select or create a workspace:
-   ```bash
-   terraform workspace select dev || terraform workspace new dev
-   ```
+### AWS account requirements
 
-3. Review the plan:
-   ```bash
-   terraform plan -var-file=environments/dev/terraform.tfvars
-   ```
+Before running Terraform locally or in CI, ensure the following exist in your AWS account:
 
-4. Apply the deployment:
-   ```bash
-   terraform apply -var-file=environments/dev/terraform.tfvars
-   ```
+1. **AWS credentials** with permissions to create and manage VPC, EC2, ELB, CloudFront, WAF, API Gateway, IAM, CloudWatch, and SNS resources.
+2. **S3 backend bucket** — `sarang-paymentology-bucket` (configured in `backend.tf`).
+3. **DynamoDB lock table** — `sarang-paymentology-locks` (prevents concurrent Terraform runs).
+4. **ACM certificate** (optional but recommended) — Required for HTTPS on the ALB. Must be in the same region as the ALB (`us-east-1` by default). Set `acm_certificate_arn` in your tfvars file.
+5. **SNS email confirmation** — After deployment, confirm the subscription sent to `alert_email` to receive monitoring alerts.
 
-## GitHub Actions CI/CD
+### Remote state
 
-- Workflow file: `.github/workflows/terraform.yml`
-- Triggers:
-  - `pull_request` on `dev` and `main`
-  - manual `workflow_dispatch` with `environment` and `action` inputs
-- Stages:
-  - `init` — runs `terraform init -reconfigure`
-  - `validate` — checks formatting and runs `terraform validate`
-  - `plan` — creates a plan for selected environment and uploads it as an artifact
-  - `approval` — manual gate for `apply` and `destroy`
-  - `apply` — executes the uploaded plan
-  - `destroy` — destroys the selected environment
-- Use `environment` input to choose `dev` or `prod`
-- Use `action` input to choose `plan`, `apply`, or `destroy`
+State is stored remotely in S3 with DynamoDB locking:
 
-## Environment-specific web tier message
+| Setting | Value |
+|---------|-------|
+| S3 bucket | `sarang-paymentology-bucket` |
+| State key | `paymentology/terraform.tfstate` |
+| Region | `us-east-1` |
+| Lock table | `sarang-paymentology-locks` |
 
-The EC2 web instances use a cloud-init template under `modules/compute/templates/user_data.sh`.
-The page text now includes the deployment environment, for example `Terraform-managed web tier in dev environment`.
+Terraform workspaces (`dev`, `prod`) share the same backend key but maintain separate state files within the workspace mechanism.
 
-## Structure
+### Configure AWS credentials
 
-- modules/networking: VPC, subnets, route tables, NAT gateways
-- modules/security: security groups
-- modules/loadbalancer: ALB and target group
-- modules/api_gateway: REST API Gateway backed by the ALB
-- modules/cloudfront: CloudFront distribution for CDN delivery
-- modules/waf: WAF ACLs for CloudFront and ALB
-- modules/compute: launch template and Auto Scaling Group
-- modules/monitoring: logging and alerting
-- environments/dev and environments/prod: environment-specific values
+**Option A — AWS CLI profile**
 
-## Notes
+```bash
+aws configure
+# Or set a named profile:
+export AWS_PROFILE=your-profile-name
+```
 
-- The current implementation uses a basic Apache web page on Amazon Linux 2.
-- API Gateway is configured to route REST requests to the ALB.
-- A CloudFront module is available for CDN distribution, and WAF is included for CloudFront and ALB protection.
-- HTTPS/TLS termination is intentionally left as a follow-up step to be wired to ACM certificates.
-- For production, add remote state storage such as S3 + DynamoDB and tighten SG rules further.
+**Option B — Environment variables**
+
+```bash
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_DEFAULT_REGION="us-east-1"
+```
+
+### Clone the repository
+
+```bash
+git clone <repository-url>
+cd demoproject
+```
+
+---
+
+## Architecture Overview
+
+```
+Internet
+   │
+   ├── CloudFront (CDN + WAF):443           ──▶ ALB HTTP :80  (matched by "Via" header rule)
+   │                                            └── Auto Scaling Group (private subnets)
+   │
+   ├── API Gateway (REST, proxy + WAF):443         ──▶ ALB HTTP :80  (matched by "User-Agent" header rule)
+   │                                            └── Auto Scaling Group (private subnets)
+   │
+   └── Direct browser access
+           ├── HTTP  :80  ──▶ redirected (301) to HTTPS :443
+           └── HTTPS :443 ──▶ ALB HTTPS listener ──▶ Auto Scaling Group (private subnets)
+```
+
+The ALB listens on port 80 and port 443. The **port 80 listener redirects all traffic to HTTPS by default**, and only *forwards to the target group* when a request matches one of two listener rules:
+
+| Priority | Rule (HTTP header condition) | Source | Action |
+|----------|------------------------------|--------|--------|
+| 1 | `Via` = `*.cloudfront.net (CloudFront)` | CloudFront origin fetch | Forward to target group |
+| 2 | `User-Agent` = `AmazonAPIGateway_*` | API Gateway integration | Forward to target group |
+| default | (no rule matched) | Direct HTTP clients | Redirect 301 → HTTPS :443 |
+
+The **port 443 (HTTPS) listener** is created only when `acm_certificate_arn` is set, and forwards directly to the target group.
+
+
+### Traffic flow: outside → inside (inbound)
+
+User and client requests enter the VPC from the public internet through three possible paths. All paths eventually reach EC2 instances in **private subnets** via the ALB target group.
+
+**Path 1 — CloudFront (recommended for end users)**
+
+```
+Internet (HTTPS)
+  → CloudFront edge location (viewer protocol: redirect-to-https)
+  → WAF (CloudFront scope — AWS managed common rule set)
+  → ALB HTTP :80 listener in public subnets (origin protocol: http-only)
+  → WAF (Regional scope — attached to ALB)
+  → Listener rule priority 1 matches "Via: *.cloudfront.net (CloudFront)" → forward
+  → ALB target group (HTTP port 80)
+  → EC2 instance in private subnet (Apache httpd on port 80)
+```
+
+**Path 2 — API Gateway**
+
+```
+Internet (HTTPS)
+  → API Gateway (Regional REST API, stage = environment name)
+  → HTTP / HTTP_PROXY integration over the internet (INTERNET connection type)
+  → ALB HTTP :80 listener (Host header rewritten to the ALB DNS name)
+  → WAF (Regional scope — attached to API Gateway)
+  → Listener rule priority 2 matches "User-Agent: AmazonAPIGateway_*" → forward
+  → ALB target group (HTTP port 80)
+  → EC2 instance in private subnet
+```
+
+**Path 3 — Direct ALB access**
+
+```
+Internet
+  ├── HTTP  :80  → ALB HTTP listener → no rule matched → 301 redirect to HTTPS :443
+  └── HTTPS :443 → ALB HTTPS listener (requires acm_certificate_arn)
+                 → WAF (Regional scope)
+                 → ALB target group (HTTP port 80)
+                 → EC2 instance in private subnet (Apache httpd on port 80)
+```
+
+| Step | Component | Subnet tier | Protocol / port |
+|------|-----------|-------------|-----------------|
+| 1 | CloudFront / API Gateway / direct client | Edge / regional / internet | HTTPS |
+| 2 | WAF (CloudFront or Regional) | Managed service | Inspects request |
+| 3 | ALB HTTP :80 listener | Public | Forwards CloudFront/API GW traffic (header rules); redirects all other HTTP → HTTPS |
+| 4 | ALB HTTPS :443 listener | Public | Forwards direct HTTPS traffic (created only when `acm_certificate_arn` is set) |
+| 5 | Target group | — | HTTP :80 (health check `GET /` expecting `200`) |
+| 6 | EC2 (Auto Scaling Group) | Private | HTTP :80 (Apache) |
+
+Security groups enforce this path: the ALB security group accepts inbound traffic from the internet on port `80` and on `ingressport` (default `443`); the web security group accepts inbound **only from the ALB security group** on port 80.
+
+---
+
+### Traffic flow: inside → outside (outbound)
+
+Resources inside the VPC reach the internet (and AWS public endpoints) through NAT and the internet gateway. EC2 instances have **no public IP addresses** and cannot be reached directly from the internet.
+
+**Outbound path from EC2 instances (private subnets)**
+
+```
+EC2 instance in private subnet
+  → Web security group (egress: all traffic allowed)
+  → Private route table (0.0.0.0/0 → NAT Gateway)
+  → Regional NAT Gateway
+  → Internet Gateway (IGW)
+  → Internet
+```
+
+Typical outbound use cases from web instances:
+
+| Destination | Purpose |
+|-------------|---------|
+| Amazon Linux yum repositories | `yum update` and package installs during boot (`user_data.sh`) |
+| AWS CloudWatch | CloudWatch agent publishes memory and disk metrics |
+| Other external APIs | Any future application calls to third-party services |
+
+**Outbound path from database subnets**
+
+Database subnets are currently set to (`create_database_subnets = false`) (when set `create_database_subnets = true`) subnets are can be provisioned and in both environments for future RDS or similar services. Reserved for future database workloads (e.g. RDS). It will be isolated from Internet access, will have local VPC access.
+
+**Monitoring and logging (inside → AWS services)**
+
+These flows stay within AWS and do not traverse the public internet path above:
+
+```
+VPC Flow Logs        → CloudWatch Logs (via IAM role)
+ALB / ASG metrics    → CloudWatch Metrics
+CloudWatch Alarms    → SNS topic → alert_email (email confirmation required)
+EC2 CloudWatch agent → CloudWatch Metrics (namespace: CWAgent)
+EC2 CloudWatch agent → CloudWatch Logs (httpd + system + cloud-init log streams)
+WAF (CloudFront/API Gateway/ALB) → CloudWatch Logs (aws-waf-logs-* groups)
+```
+
+The CloudWatch agent installed by `user_data.sh` publishes both **metrics** (`mem_used_percent`, `used_percent` in the `CWAgent` namespace) and **logs**. It tails the following files on each EC2 instance and ships them to the `/aws/asg/<project_name>-web` log group, using the instance ID as the log stream prefix:
+
+| Log file on instance | Log stream | Purpose |
+|----------------------|-----------|---------|
+| `/var/log/httpd/access_log` | `{instance_id}/httpd/access` | Apache access log |
+| `/var/log/httpd/error_log` | `{instance_id}/httpd/error` | Apache error log |
+| `/var/log/messages` | `{instance_id}/system` | OS / system messages |
+| `/var/log/cloud-init-output.log` | `{instance_id}/cloud-init` | Bootstrap (`user_data.sh`) output |
+
+**CloudWatch log groups**
+
+| Log group | Retention | Source |
+|-----------|-----------|--------|
+| `/aws/asg/<project_name>-web` | 30 days | Web tier — CloudWatch agent ships httpd access/error, system, and cloud-init logs |
+| `<project_name>-vpc-flow-logs` | 14 days | VPC Flow Logs (all traffic) |
+| `aws-waf-logs-<project_name>-cloudfront` | 30 days | CloudFront-scope WAF request logs |
+| `aws-waf-logs-<project_name>-alb` | 30 days | Regional (ALB) WAF request logs |
+
+**CloudWatch metric alarms** (all publish to the SNS topic `<project_name>-alerts`)
+
+| Alarm | Metric (namespace) | Threshold |
+|-------|--------------------|-----------|
+| `HighCPU` | `CPUUtilization` (AWS/EC2) | > 75% avg, 2 periods |
+| `HighMemory` | `mem_used_percent` (CWAgent) | > 80% avg, 2 periods |
+| `HighDiskUsage` | `used_percent` (CWAgent) | > 85% avg, 2 periods |
+| `HighNetworkIn` | `NetworkIn` (AWS/EC2) | > 50 MB avg, 2 periods |
+| `HighNetworkOut` | `NetworkOut` (AWS/EC2) | > 50 MB avg, 2 periods |
+| `InstanceStatusFailed` | `StatusCheckFailed_Instance` (AWS/EC2) | > 0, 1 period |
+| `ALB-5xxErrors` | `HTTPCode_Target_5XX_Count` (AWS/ApplicationELB) | > 5 sum, 2 periods |
+| `ALB-UnhealthyHosts` | `UnHealthyHostCount` (AWS/ApplicationELB) | > 1 avg, 2 periods |
+
+Memory and disk alarms depend on the CloudWatch agent, which is installed and configured by `user_data.sh` at instance boot (`mem_used_percent` and `used_percent` in the `CWAgent` namespace).
+
+---
+
+## Project Structure
+
+```
+demoproject/
+├── main.tf                 # Root module — wires all child modules together
+├── variables.tf            # Input variable definitions
+├── outputs.tf              # Root output definitions
+├── providers.tf            # AWS provider configuration
+├── backend.tf              # S3 remote state and provider version constraints
+├── environments/           # Terraform Workspace environments
+│   ├── dev/terraform.tfvars
+│   └── prod/terraform.tfvars
+├── modules/
+│   ├── networking/
+│   ├── security/
+│   ├── loadbalancer/
+│   ├── waf/
+│   ├── cloudfront/
+│   ├── api_gateway/
+│   ├── compute/
+│   │   └── templates/
+│   │       └── user_data.sh   # EC2 bootstrap (Apache, CloudWatch agent metrics + logs, optional TLS)
+│   ├── iam/
+│   └── monitoring/
+└── .github/workflows/
+    └── terraform.yml       # CI/CD pipeline
+```
+
+| Module | Purpose |
+|--------|---------|
+| `networking` | VPC, public/private/database subnets, regional NAT gateway (auto mode), route tables, VPC flow logs |
+| `security` | Security groups for the ALB (internet ingress) and web tier (ingress from ALB only) |
+| `loadbalancer` | Application Load Balancer, target group, HTTP :80 listener (redirect + header rules) and optional HTTPS :443 listener |
+| `waf` | WAFv2 web ACLs (CLOUDFRONT + REGIONAL scopes) using the AWS managed common rule set |
+| `cloudfront` | CDN distribution in front of the ALB (http-only origin, redirect-to-https viewer) |
+| `api_gateway` | Regional REST API with `{proxy+}` and root proxy integrations to the ALB |
+| `compute` | Launch template (Amazon Linux 2), Auto Scaling Group, and `user_data.sh` bootstrap (Apache, CloudWatch agent for metrics **and** logs, optional TLS) |
+| `iam` | EC2 instance role/profile (SSM + CloudWatch agent) and VPC flow log role |
+| `monitoring` | CloudWatch log groups, metric alarms, and SNS email notifications |
+
+---
+
+## Variable Explanations
+
+All variables are defined in `variables.tf` at the project root. Set values per environment in `environments/<env>/terraform.tfvars` before running `terraform plan` or `terraform apply`.
+
+---
+
+### Core settings
+
+| Variable | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `aws_region` | `string` | Yes | `""` | AWS region for deployment (e.g. `us-east-1`). Used by the AWS provider and API Gateway. |
+| `project_name` | `string` | Yes | `""` | Base name prefix for all resources and tags (e.g. `paymentology-dev`). |
+| `environment` | `string` | Yes | `""` | Deployment environment label (e.g. `dev`, `prod`). Used for resource tags, API Gateway stage name, and EC2 user data. |
+
+---
+
+### Networking
+
+| Variable | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `vpc_cidr` | `string` | Yes | `""` | CIDR block for the VPC (e.g. `10.20.0.0/16`). Must not overlap with other connected VPCs. |
+| `availability_zones` | `list(string)` | Yes | `[]` | List of availability zone names (e.g. `["us-east-1a", "us-east-1b"]`). |
+| `az_count` | `number` | Yes | — | Number of AZs to deploy into. Must be less than or equal to `length(availability_zones)`. |
+| `public_subnet_cidrs` | `list(string)` | Yes | `[]` | CIDR blocks for public subnets — one per AZ. Hosts the ALB and NAT gateway. |
+| `private_subnet_cidrs` | `list(string)` | Yes | `[]` | CIDR blocks for private subnets — one per AZ. Hosts EC2 instances in the Auto Scaling Group. |
+| `database_subnet_cidrs` | `list(string)` | Yes | `[]` | CIDR blocks for database subnets — one per AZ. Isolated tier for future RDS use. |
+| `create_database_subnets` | `bool` | Yes | — | When `true`, creates database subnets and their route tables. |
+
+---
+
+### Security and TLS
+
+| Variable | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `ingressport` | `number` | Yes | — | Inbound port allowed on the ALB security group from the internet (e.g. `443` for HTTPS). |
+| `acm_certificate_arn` | `string` | No | `""` | ACM certificate ARN for the ALB HTTPS listener on port 443. Leave empty to skip the HTTPS listener. |
+
+---
+
+### Compute (Auto Scaling)
+
+| Variable | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `instance_type` | `string` | Yes | `""` | EC2 instance type for web servers (e.g. `t3.micro`). |
+| `desired_capacity` | `number` | Yes | — | Target number of running instances in the Auto Scaling Group. |
+| `min_size` | `number` | Yes | — | Minimum number of instances the ASG maintains at all times. |
+| `max_size` | `number` | Yes | — | Maximum number of instances the ASG can scale up to. |
+
+---
+
+### Monitoring
+
+| Variable | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `alert_email` | `string` | No | `""` | Email address subscribed to the SNS topic for CloudWatch alarms. AWS sends a confirmation email that must be accepted before alerts are delivered. |
+
+---
+
+### Environment-specific values
+
+| Environment | File | Key differences |
+|-------------|------|-----------------|
+| Dev | `environments/dev/terraform.tfvars` | 2 AZs, VPC `10.20.0.0/16`, project name `paymentology-dev` |
+| Prod | `environments/prod/terraform.tfvars` | 3 AZs, VPC `10.30.0.0/16`, project name `paymentology-prod` |
+
+---
+## Output Descriptions
+
+After `terraform apply`, the following outputs are available:
+
+| Output | Description |
+|--------|-------------|
+| `alb_dns_name` | DNS name of the Application Load Balancer. Use this for direct ALB access or DNS CNAME records. |
+| `alb_https_url` | Full HTTPS URL to the ALB (`https://<alb-dns-name>`). Returns `null` if `acm_certificate_arn` is not set. |
+| `cloudfront_domain_name` | CloudFront distribution domain name (e.g. `d1234abcd.cloudfront.net`). |
+| `cloudfront_url` | Primary public HTTPS URL via CloudFront (`https://<cloudfront-domain>`). Recommended entry point for end users. |
+| `api_gateway_url` | Invokable API Gateway URL including the `index.html` path segment. Useful for API-based access to the application. |
+| `vpc_id` | ID of the created VPC. Reference this when adding peering, VPN, or additional resources in the same VPC. |
+
+Example:
+
+```bash
+$ terraform output
+
+alb_dns_name          = "paymentology-dev-alb-123456789.us-east-1.elb.amazonaws.com"
+alb_https_url         = "https://paymentology-dev-alb-123456789.us-east-1.elb.amazonaws.com"
+api_gateway_url       = "https://abc123.execute-api.us-east-1.amazonaws.com/dev/index.html"
+cloudfront_domain_name = "d111111abcdef8.cloudfront.net"
+cloudfront_url        = "https://d111111abcdef8.cloudfront.net"
+vpc_id                = "vpc-0abc123def456789"
+```
+
+---
+
+## Terraform Deployment Commands
+
+All commands below assume you are in the project root (`demoproject/`).
+
+### 1. Initialize Terraform
+
+Downloads providers and configures the remote S3 backend:
+
+```bash
+terraform init -upgrade
+```
+
+For local validation only (no remote state):
+
+```bash
+terraform init -upgrade -backend=false
+```
+
+### 2. Select or create a workspace
+
+Workspaces isolate state per environment (`dev` and `prod`):
+
+```bash
+# Development
+terraform workspace select -or-create dev
+
+# Production
+terraform workspace select -or-create prod
+```
+
+### 3. Validate configuration
+
+```bash
+terraform fmt -check
+terraform validate
+```
+
+### 4. Plan changes
+
+Review the execution plan before applying:
+
+```bash
+# Dev environment
+terraform plan -var-file=environments/dev/terraform.tfvars -out=tfplan
+
+# Prod environment
+terraform plan -var-file=environments/prod/terraform.tfvars -out=tfplan
+```
+
+### 5. Apply changes
+
+Apply a saved plan (recommended):
+
+```bash
+terraform apply tfplan
+```
+
+Or apply directly :
+
+```bash
+terraform apply -var-file=environments/dev/terraform.tfvars
+```
+
+### 6. View outputs
+
+After a successful apply:
+
+```bash
+terraform output
+```
+
+Show a specific output:
+
+```bash
+terraform output cloudfront_url
+```
+
+### 7. Destroy infrastructure
+
+**Warning:** This permanently removes all managed resources.
+
+```bash
+terraform workspace select dev
+terraform destroy -var-file=environments/dev/terraform.tfvars
+```
+
+### Quick reference — full dev deployment
+
+```bash
+terraform init -upgrade
+terraform workspace select -or-create dev
+terraform plan -var-file=environments/dev/terraform.tfvars -out=tfplan
+terraform apply tfplan
+terraform output
+```
+
+### CI/CD (GitHub Actions)
+
+The workflow in `.github/workflows/terraform.yml` automates validation and deployment.
+
+| Trigger | Behavior |
+|---------|----------|
+| Pull request to `dev` or `main` | Runs `init`, `validate`, and `plan` |
+| Manual workflow dispatch | Choose environment (`dev` / `prod`) and action (`plan` / `apply` / `destroy`) |
+
+Required GitHub secrets:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_DEFAULT_REGION`
+
+Manual `apply` and `destroy` actions require approval through the configured GitHub Environment (`dev` or `prod`).
+
+---
+
+## Troubleshooting
+
+| Issue | Suggested fix |
+|-------|---------------|
+| `Error acquiring the state lock` | Another process holds the lock. Wait for it to finish, or inspect the DynamoDB lock table if a run was interrupted. |
+| SNS alerts not received | Confirm the subscription email sent to `alert_email` after the first apply. |
+| HTTPS listener not created | Set a valid `acm_certificate_arn` in your tfvars file. The certificate must be issued and in the same region as the ALB. |
+| Direct HTTP request to the ALB returns a 301 redirect | Expected behavior — the port 80 listener redirects all non-CloudFront/non-API-Gateway traffic to HTTPS. Use the CloudFront URL or HTTPS. |
+| CloudFront returns 502/504 from the origin | The ALB origin is `http-only` and forwarding depends on the `Via` header rule. Verify the CloudFront distribution reaches the ALB and the regional WAF is not blocking the request. |
+| Memory / disk alarms stay in `INSUFFICIENT_DATA` | These rely on the CloudWatch agent installed by `user_data.sh`. Confirm instances booted successfully and the agent is publishing to the `CWAgent` namespace. |
+| Cannot SSH into instances | Instances have no public IP and no SSH key by default. Use **AWS SSM Session Manager** (the EC2 role includes `AmazonSSMManagedInstanceCore`). |
+| `terraform plan` shows unexpected changes | Ensure the correct workspace and tfvars file are selected for your target environment. |

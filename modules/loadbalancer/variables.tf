@@ -23,3 +23,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "tls_certificate_arn" {
+  description = "Optional ACM certificate ARN to use for HTTPS listener. If empty, tls_certificate_pem and tls_private_key_pem may be provided to import a certificate into ACM."
+  type        = string
+  default     = ""
+}

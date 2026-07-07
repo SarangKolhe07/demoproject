@@ -1,3 +1,4 @@
+
 # Create the Paymentology application load balancer
 resource "aws_lb" "paymentology_alb" {
   name               = "${var.project_name}-alb"
@@ -17,6 +18,7 @@ resource "aws_lb_target_group" "web" {
 
   health_check {
     path                = "/"
+    protocol            = "HTTP"
     matcher             = "200"
     interval            = 30
     timeout             = 5
@@ -25,15 +27,68 @@ resource "aws_lb_target_group" "web" {
   }
 }
 
-# Create the HTTP listener for the load balancer
+# HTTP listener on port 80 for CloudFront origin traffic
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.paymentology_alb.arn
   port              = 80
   protocol          = "HTTP"
+
+default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "cloudfront_origin_http" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 1
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.web.arn
+  }
+
+  condition {
+    http_header {
+      http_header_name = "Via"
+      values           = ["*.cloudfront.net (CloudFront)"]
+    }
+    }
+  }
+
+resource "aws_lb_listener_rule" "api_gateway_origin_http" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 2
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.web.arn
+  }
+
+  condition {
+    http_header {
+      http_header_name = "User-Agent"
+      values           = ["AmazonAPIGateway_*"]
+    }
+  }
+}
+
+# Create HTTPS listener if certificate available
+resource "aws_lb_listener" "https" {
+  count             = var.tls_certificate_arn != "" ? 1 : 0
+  load_balancer_arn = aws_lb.paymentology_alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  certificate_arn = var.tls_certificate_arn
+  ssl_policy      = "ELBSecurityPolicy-TLS13-1-2-2021-06"
 
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.web.arn
   }
 }
-

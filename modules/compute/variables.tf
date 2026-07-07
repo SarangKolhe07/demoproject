@@ -6,25 +6,22 @@ variable "project_name" {
 variable "instance_type" {
   description = "EC2 instance size"
   type        = string
-  default     = "t3.micro"
+  default     = ""
 }
 
 variable "desired_capacity" {
   description = "Desired number of instances"
   type        = number
-  default     = 2
 }
 
 variable "max_size" {
   description = "Maximum number of instances"
   type        = number
-  default     = 3
 }
 
 variable "min_size" {
   description = "Minimum number of instances"
   type        = number
-  default     = 2
 }
 
 variable "private_subnet_ids" {
@@ -50,7 +47,31 @@ variable "instance_profile_name" {
 variable "environment" {
   description = "Deployment environment for instance user data"
   type        = string
-  default     = "dev"
+  default     = ""
+}
+
+variable "ssh_key_name" {
+  description = "Name of the SSH key pair to attach to instances. If empty and ssh_public_key is provided, a key pair will be created with a generated name."
+  type        = string
+  default     = ""
+}
+
+variable "ssh_public_key" {
+  description = "Public SSH key material. If provided, an aws_key_pair will be created and instances will use it."
+  type        = string
+  default     = ""
+}
+
+variable "tls_certificate_pem" {
+  description = "PEM-encoded certificate body to install on instances (for HTTPS)"
+  type        = string
+  default     = ""
+}
+
+variable "tls_private_key_pem" {
+  description = "PEM-encoded private key to install on instances (for HTTPS)"
+  type        = string
+  default     = ""
 }
 
 variable "tags" {
