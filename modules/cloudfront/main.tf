@@ -1,4 +1,4 @@
-# Create the Paymentology CloudFront distribution
+# Create the Demo CloudFront distribution
 resource "aws_cloudfront_distribution" "paymentology_distribution" {
   enabled             = true
   is_ipv6_enabled     = true
