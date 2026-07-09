@@ -1,5 +1,5 @@
 
-# Create the Paymentology application load balancer
+# Create the Demo application load balancer
 resource "aws_lb" "paymentology_alb" {
   name               = "${var.project_name}-alb"
   internal           = false
