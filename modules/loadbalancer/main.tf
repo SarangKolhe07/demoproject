@@ -27,7 +27,6 @@ resource "aws_lb_target_group" "web" {
   }
 }
 
-# HTTP listener on port 80 for CloudFront origin traffic
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.paymentology_alb.arn
   port              = 80
