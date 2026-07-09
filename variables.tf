@@ -28,11 +28,6 @@ variable "availability_zones" {
   default     = []
 }
 
-variable "az_count" {
-  description = "Number of AZs to use"
-  type        = number
-}
-
 variable "public_subnet_cidrs" {
   description = "CIDR blocks for public subnets"
   type        = list(string)

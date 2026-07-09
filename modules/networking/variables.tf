@@ -14,11 +14,6 @@ variable "availability_zones" {
   type        = list(string)
 }
 
-variable "az_count" {
-  description = "Number of availability zones to use"
-  type        = number
-}
-
 variable "public_subnet_cidrs" {
   description = "CIDR blocks for public subnets"
   type        = list(string)
