@@ -5,7 +5,7 @@ output "alb_dns_name" {
 
 output "api_gateway_url" {
   description = "Invokable URL for the API Gateway"
-  value       = join("/", [module.api_gateway.invoke_url, "index.html"])
+  value       = "${module.api_gateway.invoke_url}/index.html"
 }
 
 output "cloudfront_domain_name" {
