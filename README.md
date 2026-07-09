@@ -317,7 +317,6 @@ All variables are defined in `variables.tf` at the project root. Set values per 
 | Variable | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
 | `instance_type` | `string` | Yes | `""` | EC2 instance type for web servers (e.g. `t3.micro`). |
-| `desired_capacity` | `number` | Yes | — | Target number of running instances in the Auto Scaling Group. |
 | `min_size` | `number` | Yes | — | Minimum number of instances the ASG maintains at all times. |
 | `max_size` | `number` | Yes | — | Maximum number of instances the ASG can scale up to. |
 
