@@ -7,7 +7,7 @@ output "alb_arn" {
 }
 
 output "alb_arn_suffix" {
-  value = join("/", slice(split("/", aws_lb.paymentology_alb.arn), 1, 4))
+  value = aws_lb.paymentology_alb.arn_suffix
 }
 
 output "alb_name" {
