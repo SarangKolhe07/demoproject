@@ -28,11 +28,6 @@ variable "availability_zones" {
   default     = []
 }
 
-variable "az_count" {
-  description = "Number of AZs to use"
-  type        = number
-}
-
 variable "public_subnet_cidrs" {
   description = "CIDR blocks for public subnets"
   type        = list(string)
@@ -64,11 +59,6 @@ variable "instance_type" {
   description = "EC2 instance size"
   type        = string
   default     = ""
-}
-
-variable "desired_capacity" {
-  description = "Desired number of instances"
-  type        = number
 }
 
 variable "max_size" {

@@ -296,7 +296,6 @@ All variables are defined in `variables.tf` at the project root. Set values per 
 |----------|------|----------|---------|-------------|
 | `vpc_cidr` | `string` | Yes | `""` | CIDR block for the VPC (e.g. `10.20.0.0/16`). Must not overlap with other connected VPCs. |
 | `availability_zones` | `list(string)` | Yes | `[]` | List of availability zone names (e.g. `["us-east-1a", "us-east-1b"]`). |
-| `az_count` | `number` | Yes | — | Number of AZs to deploy into. Must be less than or equal to `length(availability_zones)`. |
 | `public_subnet_cidrs` | `list(string)` | Yes | `[]` | CIDR blocks for public subnets — one per AZ. Hosts the ALB and NAT gateway. |
 | `private_subnet_cidrs` | `list(string)` | Yes | `[]` | CIDR blocks for private subnets — one per AZ. Hosts EC2 instances in the Auto Scaling Group. |
 | `database_subnet_cidrs` | `list(string)` | Yes | `[]` | CIDR blocks for database subnets — one per AZ. Isolated tier for future RDS use. |
@@ -318,7 +317,6 @@ All variables are defined in `variables.tf` at the project root. Set values per 
 | Variable | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
 | `instance_type` | `string` | Yes | `""` | EC2 instance type for web servers (e.g. `t3.micro`). |
-| `desired_capacity` | `number` | Yes | — | Target number of running instances in the Auto Scaling Group. |
 | `min_size` | `number` | Yes | — | Minimum number of instances the ASG maintains at all times. |
 | `max_size` | `number` | Yes | — | Maximum number of instances the ASG can scale up to. |
 

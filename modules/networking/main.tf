@@ -1,5 +1,5 @@
 locals {
-  azs = slice(var.availability_zones, 0, length(var.availability_zones))
+  azs = var.availability_zones
 }
 
 # Create the Paymentology VPC
@@ -47,7 +47,6 @@ resource "aws_subnet" "public" {
     var.tags,
     {
       Name = "${var.project_name}-public-${count.index + 1}"
-      Tier = "public"
     }
   )
 }
@@ -62,7 +61,6 @@ resource "aws_subnet" "private" {
     var.tags,
     {
       Name = "${var.project_name}-private-${count.index + 1}"
-      Tier = "private"
     }
   )
 }
@@ -77,7 +75,7 @@ resource "aws_subnet" "database" {
     var.tags,
     {
       Name = "${var.project_name}-database-${count.index + 1}"
-      Tier = "database"
+
     }
   )
 }
