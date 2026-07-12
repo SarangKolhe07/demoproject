@@ -13,4 +13,4 @@ max_size                = 4
 min_size                = 3
 alert_email             = "sarang.kolhe79@gmail.com"
 ingressport             = 443
-acm_certificate_arn = "arn:aws:acm:us-east-1:634512762993:certificate/87516c1b-2e5a-4aaf-8555-feb302186bcb"
+acm_certificate_arn     = "arn:aws:acm:us-east-1:634512762993:certificate/87516c1b-2e5a-4aaf-8555-feb302186bcb"
