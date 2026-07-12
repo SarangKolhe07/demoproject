@@ -9,7 +9,6 @@ private_subnet_cidrs    = ["10.20.11.0/24", "10.20.12.0/24"]
 database_subnet_cidrs   = ["10.20.21.0/24", "10.20.22.0/24"]
 create_database_subnets = false
 instance_type           = "t3.micro"
-desired_capacity        = 2
 max_size                = 3
 min_size                = 2
 alert_email             = "sarang.kolhe79@gmail.com"
