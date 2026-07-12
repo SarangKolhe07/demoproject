@@ -1,7 +1,6 @@
 aws_region              = "us-east-1"
 environment             = "dev"
 project_name            = "paymentology-dev"
-az_count                = 2
 availability_zones      = ["us-east-1a", "us-east-1b"]
 vpc_cidr                = "10.20.0.0/16"
 public_subnet_cidrs     = ["10.20.1.0/24", "10.20.2.0/24"]
