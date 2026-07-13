@@ -33,6 +33,22 @@ env:
   AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
 jobs:
+  init:
+    name: Terraform init
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+          terraform_wrapper: false
+          
+      - name: Terraform init
+        run: terraform init -upgrade -backend=false -input=false
+
   validate:
     name: Terraform validate
     runs-on: ubuntu-latest
@@ -43,7 +59,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.7
+          terraform_version: 1.15.8
           terraform_wrapper: false
           
       - name: Format check
@@ -67,7 +83,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.7
+          terraform_version: 1.15.8
           terraform_wrapper: false
           
       - name: Determine environment
@@ -126,7 +142,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.7
+          terraform_version: 1.15.8
           terraform_wrapper: false
           
       - name: Download plan
@@ -158,7 +174,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.7
+          terraform_version: 1.15.8
           terraform_wrapper: false
 
       - name: Determine environment
