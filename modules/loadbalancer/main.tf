@@ -1,5 +1,5 @@
 
-# Create the Demo application load balancer
+# Create the Paymentology application load balancer
 resource "aws_lb" "paymentology_alb" {
   name               = "${var.project_name}-alb"
   internal           = false
@@ -27,6 +27,7 @@ resource "aws_lb_target_group" "web" {
   }
 }
 
+# HTTP listener on port 80 for CloudFront origin traffic
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.paymentology_alb.arn
   port              = 80
@@ -84,7 +85,7 @@ resource "aws_lb_listener" "https" {
   port              = 443
   protocol          = "HTTPS"
   certificate_arn = var.tls_certificate_arn
-  #ssl_policy      = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  ssl_policy      = "ELBSecurityPolicy-TLS13-1-2-2021-06"
 
   default_action {
     type             = "forward"

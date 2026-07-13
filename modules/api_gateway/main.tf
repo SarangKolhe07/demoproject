@@ -1,4 +1,4 @@
-# Create the Demo API Gateway REST API
+# Create the Paymentology API Gateway REST API
 resource "aws_api_gateway_rest_api" "paymentology_api" {
   name = "${var.project_name}-api"
 
@@ -61,7 +61,7 @@ resource "aws_api_gateway_integration" "proxy_any" {
   }
 }
 
-# Deploy the Demo API Gateway configuration
+# Deploy the Paymentology API Gateway configuration
 resource "aws_api_gateway_deployment" "paymentology_deployment" {
   rest_api_id = aws_api_gateway_rest_api.paymentology_api.id
 

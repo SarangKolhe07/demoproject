@@ -7,7 +7,7 @@ output "alb_arn" {
 }
 
 output "alb_arn_suffix" {
-  value = aws_lb.paymentology_alb.arn_suffix
+  value = join("/", slice(split("/", aws_lb.paymentology_alb.arn), 1, 4))
 }
 
 output "alb_name" {
@@ -19,6 +19,6 @@ output "target_group_arn" {
 }
 
 output "target_group_arn_suffix" {
-  value = aws_lb_target_group.web.arn_suffix
+  value = join("/", slice(split("/", aws_lb_target_group.web.arn), 1, 3))
 }
 
