@@ -114,12 +114,6 @@ jobs:
             terraform plan -var-file=environments/prod/terraform.tfvars -out=tfplan
           fi
 
-      - name: Upload plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-plan
-          path: tfplan
-
   manual_approval:
     name: Manual approval
     runs-on: ubuntu-latest
